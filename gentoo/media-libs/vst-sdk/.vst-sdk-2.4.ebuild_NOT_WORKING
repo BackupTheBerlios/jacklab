@@ -1,0 +1,69 @@
+# Copyright 1999-2004 Gentoo Foundation
+# Distributed under the terms of the GNU General Public License v2
+# install proprietary Steinberg VST SDK 2.3 to "/opt/${MY_P}"
+# bug #61290
+
+inherit eutils
+
+RESTRICT="nostrip nomirror"
+
+DESCRIPTION="Steinberg VST Plug-Ins SDK 2.3 - win32"
+HOMEPAGE="http://www.steinberg.de/sdk_downloads/vst_29468/"
+IUSE=""
+
+MY_PV="${PV/./_}"
+SRC_URI="x86? ( http://www.steinberg.de/sdk_downloads/vst_29468/vstsdk${MY_PV}.zip )"
+
+LICENSE="STEINBERG SOFT-UND HARDWARE GMBH"
+SLOT="1"
+KEYWORDS="x86"
+
+DEPEND="${DEPEND}"
+
+BASE="/opt"
+MY_PN="${PN/-/}"
+MY_P="${MY_PN}${MY_PV}"
+S="${WORKDIR}/${MY_PN}${PV}"
+
+pkg_nofetch() {
+	einfo "Please go to ${HOMEPAGE}"
+	einfo "and download the appropriate sdk zip archive for win32."
+	einfo " "
+	einfo "You may want to try ftp://ext2asio:sdk1ext@ftp.pinnaclesys.com/SDK"
+	einfo "if the above does not work for you."
+	einfo " "
+	einfo "Download ${MY_P}.zip and place it in :"
+	einfo "${DISTDIR}"
+	einfo " "
+	ewarn "YOU MUST AGREE TO THE LICENSE TERMS LISTED AT HOMEPAGE"
+	ewarn "${HOMEPAGE}"
+}
+
+src_unpack() {
+	unpack ${MY_P}.zip || die
+	find -type f -exec chmod 0644 {} \;
+	find -type d -exec chmod 0755 {} \;
+}
+
+src_install() {
+	header_path="${S}/public.sdk/source/vst2.x/"
+	include_path="/usr/include/vst"
+
+	dodir "${BASE}"
+	dodir  "${include_path}"
+	mv ${header_path}/* ${D}/${include_path}
+	rmdir "${header_path}"
+	mv "${S}/../${MY_PN}${PV}" "${D}/${BASE}"
+	dosym  "${include_path}" "${BASE}/${header_path}"
+}
+
+pkg_postinst() {
+	echo
+	einfo "Finished installing Steinberg VST Plug-Ins SDK ${PV} into"
+	einfo "${BASE}/${MY_P}"
+	einfo "DO NOT IGNORE THE IMPLICATIONS OF THIS LICENSE"
+	einfo "and please *please* if you haven't already, READ THE LICENSE"
+	einfo "${BASE}/${MY_P}/VST Licensing Agreement.html"
+	einfo "${BASE}/${MY_P}/vst licensing agreement.rtf"
+}
+
