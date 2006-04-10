@@ -1,0 +1,12 @@
+diff -Naur idjc-0.5.8/idjcpython/idjcgui.py idjc-0.5.8-neu/idjcpython/idjcgui.py
+--- idjc-0.5.8/idjcpython/idjcgui.py	2006-02-21 13:52:25.000000000 +0100
++++ idjc-0.5.8-neu/idjcpython/idjcgui.py	2006-03-23 13:47:20.819465250 +0100
+@@ -39,7 +39,7 @@
+          os.environ["G_FILENAME_ENCODING"]=fe
+       else:
+          fe = "UTF-8"
+-   elif fe.lower() == "@locale" or fe.lower() == "locale":
++   elif fe.startswith("@locale") or fe.startswith("locale"):
+       fe = de
+       os.environ["G_FILENAME_ENCODING"]=fe
+   

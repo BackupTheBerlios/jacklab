@@ -1,0 +1,30 @@
+diff -Naur idjc-0.5.8/idjcpython/IDJCmedia.py idjc-0.5.8-neu/idjcpython/IDJCmedia.py
+--- idjc-0.5.8/idjcpython/IDJCmedia.py	2006-02-21 13:48:09.000000000 +0100
++++ idjc-0.5.8-neu/idjcpython/IDJCmedia.py	2006-03-23 18:37:16.000000000 +0100
+@@ -934,6 +934,14 @@
+       return True
+    
+    def drag_data_received_data_idle(self, treeview, x, y, dragged):
++      #first fetch out some characters, that crappy filemanagers do not encode properly
++      dragged = dragged.replace("%20", " ")
++      dragged = dragged.replace("%5B", "[")
++      dragged = dragged.replace("%5D", "]")
++      dragged = dragged.replace("%40", "@")
++      dragged = dragged.replace("%26", "&")
++      #TODO: find a generic way to convert the dragged paths/filenames properly
++
+       gtk.gdk.threads_enter()
+       model = treeview.get_model()
+       gtk.gdk.threads_leave()
+@@ -941,6 +949,11 @@
+          filename = dragged[5:]
+       else:
+          filename = dragged
++
++      #grep out all \x00 chars when using unicode strings to avoid errors
++      if filename.endswith('\x00'): filename = filename.rstrip('\x00')
++      dragged = dragged.replace("\x00", "")
++ 
+       # This will attempt to parse m3u files provided they are the only thing dragged
+       if dragged.count("\n") == 0 and os.path.splitext(dragged)[1] == ".m3u":
+ 	 path = os.path.split(filename)[0] + "/"

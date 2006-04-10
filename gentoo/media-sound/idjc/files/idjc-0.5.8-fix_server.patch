@@ -1,0 +1,169 @@
+diff -Naur idjc-0.5.8.orig/c/idjcserver.c idjc-0.5.8/c/idjcserver.c
+--- idjc-0.5.8.orig/c/idjcserver.c	2006-03-21 13:26:12.067948872 +0100
++++ idjc-0.5.8/c/idjcserver.c	2006-03-21 13:26:53.553642088 +0100
+@@ -59,6 +59,8 @@
+ #define MP3_BUF_SIZ 4096
+ #define SRC_SIZE 8192
+ 
++#define AP_ACTUATION_DELAY 0.25F
++#define AP_CANCEL_THRESH 0.01F
+ 
+ pthread_mutex_t pm = PTHREAD_MUTEX_INITIALIZER;
+ 
+@@ -82,8 +84,12 @@
+ int ringbuffer_can_write = FALSE, sringbuffer_can_write = FALSE, ringbuffer_flush = FALSE, sringbuffer_flush = FALSE, disconnect_f = FALSE, is_saving = FALSE;
+ int keep_connection, keep_saving, keep_watchdog, newmeta;
+ /* data passed from the GUI pointed to by these variables */
+-char *server_type, *host, *port, *password, *name, *metatext, *format, *bandwidth, *action, *streamname, *streamurl, *streamdesc, *streamgenre, *mount, *status_tag, *save_file, *save_artist, *save_title, *save_format, *save_bitrate, *public_s, *meta_s, *save_pause;
+-int public_f, meta_f, pause_f;
++char *server_type, *host, *port, *password, *name, *metatext, *format, *bandwidth, *action, *streamname, *streamurl, *streamdesc, *streamgenre, *mount, *status_tag, *save_file, *save_artist, *save_title, *save_format, *save_bitrate, *public_s, *meta_s, *save_pause, *auto_pause, *ap_actuation_delay, *ap_cancel_thresh_log;
++int public_f, meta_f, pause_f, paused;
++/* autopause stuff */
++int auto_pause_f, auto_pause_actuate_f, ap_actuation_delay_samples;
++uint64_t ap_quiet_samples_count;
++float ap_cancel_thresh = AP_CANCEL_THRESH;
+ /* used for pipes */
+ int reader[2], writer[2], sreader[2], swriter[2];
+ /* thread handles */
+@@ -98,6 +104,9 @@
+          { "SERV", &server_type },
+          { "RECF", &save_file },
+          { "RECP", &save_pause },
++         { "AUTP", &auto_pause },
++         { "APOD", &ap_actuation_delay },
++         { "APTH", &ap_cancel_thresh_log },
+          { "ARTI", &save_artist },
+          { "TITL", &save_title },
+          { "SFMT", &save_format },
+@@ -141,8 +150,21 @@
+ 
+ void process_audio(jack_nframes_t nframes)
+    {
++   sample_t *ptrl, *ptrr;
+    sample_t *ls_buffer = (sample_t *) jack_port_get_buffer (stream_left_port, nframes);
+    sample_t *rs_buffer = (sample_t *) jack_port_get_buffer (stream_right_port, nframes);
++   
++   /* audio level analysis for the autopause feature */
++   ptrl = ls_buffer + nframes;
++   ptrr = rs_buffer + nframes;
++   while (ptrl-- != ls_buffer)
++      {
++      if (fabsf(*ptrl) > ap_cancel_thresh || fabsf(*--ptrr) > ap_cancel_thresh)
++         ap_quiet_samples_count = 0L;
++      else
++         ap_quiet_samples_count++;
++      }
++
+    jack_nframes_t space_avail = jack_ringbuffer_write_space(rightring) / sizeof (sample_t);
+    jack_nframes_t todo = (space_avail > nframes ? nframes : space_avail);
+     
+@@ -224,8 +246,10 @@
+    while (keep_saving == TRUE)
+       {
+       usleep(10000);
+-      sringbuffer_can_write = !pause_f;
+-      sringbuffer_flush = pause_f;
++      auto_pause_actuate_f = ap_quiet_samples_count  > ap_actuation_delay_samples;
++      paused = pause_f | (auto_pause_f & auto_pause_actuate_f);
++      sringbuffer_can_write = !paused;
++      sringbuffer_flush = paused;
+       if (!(frames = jack_ringbuffer_read_space(rightsring) / sizeof (sample_t) & ~ 0xF))
+          continue;
+       frames = (frames > SRC_SIZE) ? SRC_SIZE : frames;
+@@ -295,7 +319,8 @@
+    unsigned char *mp3buff;
+    long qty_read, ret;
+    shout_metadata_t *meta;
+-   
++   int err_code;
++
+    shout_init();
+    if (!(mp3buff = (unsigned char *)malloc(MP3_BUF_SIZ)))
+       {
+@@ -448,34 +473,22 @@
+             }   
+ 	 usleep(50000);
+          }
+-      }
+-   else
+-      {
+-      fprintf(stderr, "Error connecting: %s\n", shout_get_error(shout));
+-      goto error;
+-      }
+-   if(pthread_cancel(watchdog_h) == 0)
+-      {
+       shout_close(shout);
+-      error:
+-      shout_free(shout);
+-      error2:
+-      shout_shutdown();
+-      keep_connection = FALSE;
+-      close(reader[0]);
+-      pthread_join(codec_feeder_h, NULL);
+-      fprintf(stderr, "Disconnected\n");
+-      connection = DISCONNECTED;
+-      disconnect_f = FALSE;  
+       }
+    else
+-      {
+-      while (TRUE)
+-         {
+-         fprintf(stderr, "Failed to stop watchdog... looping in the hope watchdog will stop us\n");
+-	 sleep(1);
+-	 }
+-      }
++      fprintf(stderr, "Error connecting: %s\nError code: %d\n", shout_get_error(shout));
++      
++   pthread_cancel(watchdog_h);
++   error:
++   shout_free(shout);
++   error2:
++   shout_shutdown();
++   keep_connection = FALSE;
++   close(reader[0]);
++   pthread_join(codec_feeder_h, NULL);
++   fprintf(stderr, "Disconnected\n");
++   connection = DISCONNECTED;
++   disconnect_f = FALSE;  
+    newmeta = FALSE;
+    return NULL;
+    }
+@@ -835,6 +848,7 @@
+    					JackPortIsInput, 0);
+    
+    sr = jack_get_sample_rate(client);
++   ap_actuation_delay_samples = AP_ACTUATION_DELAY * (float)sr;
+    
+ #if HAVE_LIBSHOUT
+    if (!(leftring = jack_ringbuffer_create(RB_SIZE)))
+@@ -885,8 +899,6 @@
+          meta_f = (meta_s[0] == '1') ? 1 : 0;
+       if (public_s)
+          public_f = (public_s[0] == '1') ? 1 : 0;
+-      if (save_pause)
+-         pause_f = (save_pause[0] == '1') ? 1 : 0;  
+ #if HAVE_LIBSHOUT
+       if (!(strcmp(action, "connect")) && keep_connection == FALSE && disconnect_f == FALSE)
+ 	 if (stream_connect() != 0)
+@@ -911,9 +923,20 @@
+          stop_saving();
+          fprintf(stderr, "Recording finished\n");
+          }
++      if(!(strcmp(action, "Pause")))
++         {
++         if (save_pause)
++            pause_f = (save_pause[0] == '1') ? 1 : 0;
++         if (auto_pause)
++            auto_pause_f = (auto_pause[0] == '1') ? 1 : 0;
++         if (ap_actuation_delay)
++            ap_actuation_delay_samples = atof(ap_actuation_delay) * sr;
++         if (ap_cancel_thresh_log)
++            ap_cancel_thresh = powf(10.0F, (float)atoi(ap_cancel_thresh_log) / 20.0F);
++         }
+       if(!(strcmp(action, "status")))
+          {
+-	 printf("%s %s %lu %d\n", reply[connection], status_tag, total, is_saving);
++	 printf("%s %s %lu %d %d\n", reply[connection], status_tag, total, is_saving, paused);
+ 	 fflush(stdout);
+ 	 }
+       }
