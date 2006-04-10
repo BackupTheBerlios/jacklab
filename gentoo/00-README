@@ -18,11 +18,26 @@ tells you to STFUAPOA or god knows what else.
 
 USAGE:
 
-- first checkout the overlay with
+1.) first checkout the overlay with
 
-	$ cd /usr/local/overlays
-	$ cvs -d ":pserver:anonymous@cvs.jacklab.berlios.de:/cvsroot/jacklab"  co -P -d "jacklab-overlay" "gentoo"
-
-- add the overlay to /etc/make.conf. For info on how to do so, please refer to
+  $ cd /usr/local/overlays
+  $ cvs -d ":pserver:anonymous@cvs.jacklab.berlios.de:/cvsroot/jacklab"  co -P -d "jacklab-overlay" "gentoo"
+  
+  Note that you maybe have to create the dir /usr/local/overlays first
+  
+2.) add the overlay to /etc/make.conf. For info on how to do so, please refer to
 http://gentoo-wiki.com/HOWTO_Installing_3rd_Party_Ebuilds
 
+3.) to update the overlay:
+
+  $ cd /usr/local/overlays/jacklab-overlay
+  $ cvs up -dP
+
+
+TROUBLE?
+
+From time to time it might happen that you get things like "digest verification failed" or similar.
+This is because someone forgot to re-digest the ebuild after commiting changes. Just cd in the
+directory of the ebuild ("foo" in the example) and do:
+
+  $ ebuild foo.ebuild digest
