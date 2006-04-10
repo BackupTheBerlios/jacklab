@@ -1,0 +1,20 @@
+--- muse/app.cpp	2006-03-31 21:59:51.657942176 +0200
++++ muse/app.cpp	2006-03-31 22:00:07.383218502 +0200
+@@ -1,7 +1,7 @@
+ //=========================================================
+ //  MusE
+ //  Linux Music Editor
+-//  $Id: museseq-0.8.1-lash-shutdown-fix.patch,v 1.1 2006/04/10 12:26:34 gimpel Exp $
++//  $Id: museseq-0.8.1-lash-shutdown-fix.patch,v 1.1 2006/04/10 12:26:34 gimpel Exp $
+ //
+ //  (C) Copyright 1999-2004 Werner Schweer (ws@seh.de)
+ //=========================================================
+@@ -2751,7 +2751,7 @@
+           std::cout << "Recieved unknown LASH event of type "
+                     << lash_event_get_type (event)
+                     << std::endl;
+-          //lash_event_destroy (event);
++          lash_event_destroy (event);
+ 	  }
+ 	  break;
+         }
