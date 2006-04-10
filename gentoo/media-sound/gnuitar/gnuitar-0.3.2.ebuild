@@ -1,6 +1,6 @@
 # Copyright 1999-2006 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /home/xubuntu/berlios_backup/github/tmp-cvs/jacklab/Repository/gentoo/media-sound/gnuitar/gnuitar-0.3.2.ebuild,v 1.1 2006/04/10 16:13:57 gimpel Exp $
+# $Header: /home/xubuntu/berlios_backup/github/tmp-cvs/jacklab/Repository/gentoo/media-sound/gnuitar/gnuitar-0.3.2.ebuild,v 1.2 2006/04/10 16:35:53 gimpel Exp $
 
 DESCRIPTION="a program for real-time guitar sound effect processing"
 HOMEPAGE="http//www.gnuitar.com"
@@ -21,4 +21,5 @@ src_compile() {
 
 src_install() {
 	make DESTDIR="${D}" install || die "install failed"
+	dodoc README
 }
