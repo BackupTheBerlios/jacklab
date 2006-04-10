@@ -1,7 +1,12 @@
 Welcome Earthling!
 
+ABOUT:
+
 This is the jacklab gentoo overlay containing pro-audio software and libs that
 are not in official portage.
+The ebuilds come from different sources: some of them are written by gimpel,
+lots of them are from evermind's superb pro-audio overlay which can be found
+here: http://forums.gentoo.org/viewtopic-t-427211.html
 
 DISCLAIMER:
 
