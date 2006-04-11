@@ -1,6 +1,6 @@
 # Copyright 1999-2006 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /home/xubuntu/berlios_backup/github/tmp-cvs/jacklab/Repository/gentoo/media-sound/gneutronica/gneutronica-0.28.ebuild,v 1.1 2006/04/10 15:47:14 gimpel Exp $
+# $Header: /home/xubuntu/berlios_backup/github/tmp-cvs/jacklab/Repository/gentoo/media-sound/gneutronica/gneutronica-0.28.ebuild,v 1.2 2006/04/11 13:47:15 gimpel Exp $
 
 inherit eutils
 
@@ -33,7 +33,7 @@ src_install() {
 	# violation
 	# so.. manual install
 	dobin gneutronica
-	insinto /usr/share/${PN}/drumkits
+	insinto /usr/local/share/${PN}/drumkits
 	doins drumkits/*.dk
 	insinto /usr/share/${PN}/documentation
 	doins documentation/gneutronica.html documentation/*.png
