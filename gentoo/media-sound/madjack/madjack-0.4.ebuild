@@ -1,6 +1,6 @@
 # Copyright 1999-2006 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /home/xubuntu/berlios_backup/github/tmp-cvs/jacklab/Repository/gentoo/media-sound/madjack/madjack-0.4.ebuild,v 1.1 2006/04/11 20:47:16 gimpel Exp $
+# $Header: /home/xubuntu/berlios_backup/github/tmp-cvs/jacklab/Repository/gentoo/media-sound/madjack/madjack-0.4.ebuild,v 1.2 2006/04/11 20:53:30 gimpel Exp $
 
 DESCRIPTION="MadJACK is a MPEG Audio Deck for the Jack Audio Connection Kit with
 an OSC based control interface"
@@ -20,5 +20,6 @@ DEPEND=">=media-libs/liblo-0.23
 
 src_install() {
 	make DESTDIR="${D}" install || die "install failed"
+	dodoc README AUTHORS TODO ChangeLog
 }
 
