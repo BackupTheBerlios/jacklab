@@ -1,2 +1,6 @@
 MD5 e8a193e4c21343c51f3bfbdd72861aec files/digest-libinstpatch-1.0.0_pre1 74
-MD5 480754fb97241d848069f83daa5e78b5 libinstpatch-1.0.0_pre1.ebuild 764
+RMD160 3bedc2c45cc61a04114e17538ea847f9bfe405ab files/digest-libinstpatch-1.0.0_pre1 74
+SHA256 30927b629cdb5f645e58df58f6b56531d8da8e86b199471f07ebd36680e2f93d files/digest-libinstpatch-1.0.0_pre1 74
+MD5 eacb262abb94f6da7aed669cd564496a libinstpatch-1.0.0_pre1.ebuild 878
+RMD160 8c51ff6bbf06cb3e934610789000039670e1e0ef libinstpatch-1.0.0_pre1.ebuild 878
+SHA256 1e7cbe9c70c7d042b74ff1fbb01ca4e9f2e6e655ffc3cdf58ccf1dae2f3518a6 libinstpatch-1.0.0_pre1.ebuild 878
